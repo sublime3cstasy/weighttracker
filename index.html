@@ -143,12 +143,11 @@
     </div>
 
     <script>
-        // Default initial data reflecting late summer start (~76kg) down to lock-in start in October and 70.1kg yesterday
         const defaultEntries = [
             { date: '2026-09-01', weight: 76.2 },
             { date: '2026-09-10', weight: 75.8 },
             { date: '2026-09-20', weight: 75.5 },
-            { date: '2026-10-01', weight: 75.0 }, // Locked in start of October
+            { date: '2026-10-01', weight: 75.0 },
             { date: '2026-10-05', weight: 74.3 },
             { date: '2026-10-10', weight: 73.6 },
             { date: '2026-10-15', weight: 72.8 },
@@ -156,10 +155,13 @@
             { date: '2026-10-25', weight: 71.5 },
             { date: '2026-10-30', weight: 70.8 },
             { date: '2026-11-05', weight: 70.3 },
-            { date: '2026-11-08', weight: 70.1 }  // Yesterday
+            { date: '2026-11-08', weight: 70.1 }
         ];
 
-        let entries = JSON.parse(localStorage.getItem('sleekweight_entries')) || defaultEntries;
+        let entries = JSON.parse(localStorage.getItem('sleekweight_entries'));
+        if (!entries || entries.length === 0) {
+            entries = defaultEntries;
+        }
         let weightChart = null;
 
         function saveToStorage() {
@@ -180,7 +182,6 @@
             if (entries.length === 0) return;
 
             const latest = entries[entries.length - 1];
-            const startOct = entries.find(e => e.date >= '2026-10-01') || entries[0];
             
             // Current weight & Date
             document.getElementById('currentWeightDisplay').innerText = latest.weight.toFixed(1) + ' kg';
@@ -191,10 +192,10 @@
             const avg7 = last7.reduce((acc, curr) => acc + curr.weight, 0) / last7.length;
             document.getElementById('weeklyAvgDisplay').innerText = avg7.toFixed(1) + ' kg';
 
-            // Total change from start (~76kg or initial)
+            // Total change from start
             const totalDiff = latest.weight - entries[0].weight;
             const diffElem = document.getElementById('totalChangeDisplay');
-            diffElem.innerText = (totalDiff > int = 0 ? '+' : '') + totalDiff.toFixed(1) + ' kg';
+            diffElem.innerText = (totalDiff > 0 ? '+' : '') + totalDiff.toFixed(1) + ' kg';
 
             // Diff badge compared to previous entry
             if (entries.length > 1) {
