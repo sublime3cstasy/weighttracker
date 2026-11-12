@@ -1,142 +1,209 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SleekWeight - Cutting & Progress Analytics</title>
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>SleekWeight - Cutting Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #0b0f19;
             color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
         }
         .glass-card {
-            background: rgba(17, 24, 39, 0.7);
+            background: rgba(17, 24, 39, 0.75);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+        /* Hide scrollbar for clean mobile look */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
     </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="min-h-screen pb-14">
     <!-- Header -->
-    <header class="border-b border-gray-800 bg-gray-900/50 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header class="border-b border-gray-800 bg-gray-900/70 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xl">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-lg">
                     ⚖️
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg text-white">SleekWeight</h1>
-                    <p class="text-xs text-gray-400">Cutting & Progress Analytics</p>
+                    <h1 class="font-bold text-base text-white leading-tight">SleekWeight</h1>
+                    <p class="text-[11px] text-gray-400">Cut Analytics & Weekly Pace</p>
                 </div>
             </div>
-            <button onclick="openLogModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-lg shadow-indigo-600/20 flex items-center space-x-2">
+            <button onclick="openLogModal()" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition shadow-lg shadow-indigo-600/20 flex items-center space-x-1.5">
                 <span>+ Log Weight</span>
             </button>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 mt-6 space-y-6">
-        <!-- Stats Overview Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="glass-card p-5 rounded-2xl">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Current Weight</p>
-                <div class="flex items-baseline space-x-2 mt-2">
-                    <span id="currentWeightDisplay" class="text-3xl font-bold text-white">70.1 kg</span>
-                    <span id="weightDiffBadge" class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">--</span>
+    <main class="max-w-4xl mx-auto px-4 mt-5 space-y-5">
+        <!-- Top KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="glass-card p-4 rounded-2xl">
+                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Current</p>
+                <div class="flex items-baseline space-x-1.5 mt-1">
+                    <span id="currentWeightDisplay" class="text-2xl font-bold text-white">-- kg</span>
                 </div>
-                <p id="currentDateDisplay" class="text-xs text-gray-500 mt-2">Latest entry</p>
+                <div class="mt-1.5 flex items-center justify-between">
+                    <span id="currentDateDisplay" class="text-[11px] text-gray-500">--</span>
+                    <span id="weightDiffBadge" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full">--</span>
+                </div>
             </div>
 
-            <div class="glass-card p-5 rounded-2xl">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">7-Day Trend (Avg)</p>
-                <div class="flex items-baseline space-x-2 mt-2">
-                    <span id="weeklyAvgDisplay" class="text-3xl font-bold text-white">-- kg</span>
+            <div class="glass-card p-4 rounded-2xl">
+                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">7-Day Avg</p>
+                <div class="flex items-baseline space-x-1.5 mt-1">
+                    <span id="weeklyAvgDisplay" class="text-2xl font-bold text-emerald-400">-- kg</span>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Smoothed daily noise</p>
+                <p class="text-[11px] text-gray-500 mt-1.5">True smoothed weight</p>
             </div>
 
-            <div class="glass-card p-5 rounded-2xl">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Cut Progress</p>
-                <div class="flex items-baseline space-x-2 mt-2">
-                    <span id="totalChangeDisplay" class="text-3xl font-bold text-indigo-400">-- kg</span>
+            <div class="glass-card p-4 rounded-2xl">
+                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Weekly Pace</p>
+                <div class="flex items-baseline space-x-1.5 mt-1">
+                    <span id="weeklyRateDisplay" class="text-2xl font-bold text-white">--</span>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">Since early October (~76kg start)</p>
+                <p id="paceStatusText" class="text-[11px] text-gray-500 mt-1.5">Target: -0.5 to -0.8 kg/wk</p>
+            </div>
+
+            <div class="glass-card p-4 rounded-2xl">
+                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Total Lost</p>
+                <div class="flex items-baseline space-x-1.5 mt-1">
+                    <span id="totalChangeDisplay" class="text-2xl font-bold text-indigo-400">-- kg</span>
+                </div>
+                <p id="goalEtaDisplay" class="text-[11px] text-gray-500 mt-1.5">Since start</p>
             </div>
         </div>
 
         <!-- Chart Section -->
-        <div class="glass-card p-6 rounded-2xl">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold text-white text-base">Weight Trajectory</h2>
-                <span class="text-xs text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">Target: 70.0 kg</span>
+        <div class="glass-card p-5 rounded-2xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div>
+                    <h2 class="font-semibold text-white text-sm">Weight Trajectory</h2>
+                    <p class="text-[11px] text-gray-400">Raw weigh-ins vs. 7-day moving trend</p>
+                </div>
+                <div class="flex items-center space-x-3 text-[11px]">
+                    <span class="flex items-center text-gray-300"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-1.5"></span>Daily</span>
+                    <span class="flex items-center text-gray-300"><span class="w-2.5 h-0.5 bg-emerald-400 mr-1.5"></span>Trend</span>
+                    <button onclick="editTargetWeight()" id="targetBadge" class="text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/20 transition">
+                        Goal: 69.5 kg ✎
+                    </button>
+                </div>
             </div>
-            <div class="relative h-72 w-full">
+            <div class="relative h-64 w-full">
                 <canvas id="weightChart"></canvas>
             </div>
         </div>
 
-        <!-- Quick Action & Logs Table -->
+        <!-- Weekly Overview Section -->
         <div class="glass-card rounded-2xl overflow-hidden">
-            <div class="p-5 border-b border-gray-800 flex justify-between items-center">
-                <h2 class="font-semibold text-white text-base">History Log</h2>
-                <button onclick="resetToDefaultData()" class="text-xs text-gray-400 hover:text-gray-200 underline">Reset default entries</button>
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                <div>
+                    <h2 class="font-semibold text-white text-sm">Weekly Overview</h2>
+                    <p class="text-[11px] text-gray-400">Week-over-week averages (Mon – Sun)</p>
+                </div>
+                <span class="text-[11px] text-gray-400 bg-gray-800/80 px-2.5 py-1 rounded-lg">Best cut metric</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-800 text-xs text-gray-400 bg-gray-900/40">
-                            <th class="py-3 px-5">Date</th>
-                            <th class="py-3 px-5">Weight (kg)</th>
-                            <th class="py-3 px-5">Change</th>
-                            <th class="py-3 px-5 text-right">Action</th>
+                        <tr class="border-b border-gray-800 text-[11px] text-gray-400 bg-gray-900/40">
+                            <th class="py-2.5 px-4">Week</th>
+                            <th class="py-2.5 px-4">Avg Weight</th>
+                            <th class="py-2.5 px-4">vs Prev Wk</th>
+                            <th class="py-2.5 px-4 text-right">Cut Status</th>
                         </tr>
                     </thead>
-                    <tbody id="logTableBody" class="divide-y divide-gray-800/50 text-sm">
+                    <tbody id="weeklyTableBody" class="divide-y divide-gray-800/50 text-xs">
                         <!-- Populated via JS -->
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Daily History Log -->
+        <div class="glass-card rounded-2xl overflow-hidden">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                <h2 class="font-semibold text-white text-sm">Daily Logs</h2>
+                <span id="entryCountBadge" class="text-[11px] text-gray-400">0 entries</span>
+            </div>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 bg-gray-900 z-10">
+                        <tr class="border-b border-gray-800 text-[11px] text-gray-400">
+                            <th class="py-2.5 px-4">Date</th>
+                            <th class="py-2.5 px-4">Weight</th>
+                            <th class="py-2.5 px-4">Change</th>
+                            <th class="py-2.5 px-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody" class="divide-y divide-gray-800/50 text-xs">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Backup Footer -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 px-1 text-[11px] text-gray-500">
+            <div class="flex items-center space-x-3">
+                <button onclick="exportData()" class="hover:text-gray-300 underline">Export Backup</button>
+                <span>•</span>
+                <label class="hover:text-gray-300 underline cursor-pointer">
+                    Import Backup
+                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
+                </label>
+            </div>
+            <button onclick="resetToDefaultData()" class="hover:text-rose-400 underline">Reset defaults</button>
+        </div>
     </main>
 
     <!-- Modal for Logging -->
-    <div id="logModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="glass-card bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+    <div id="logModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card bg-gray-900 border border-gray-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-lg">Log Daily Weight</h3>
-                <button onclick="closeLogModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+                <h3 class="font-bold text-white text-base">Log Weigh-In</h3>
+                <button onclick="closeLogModal()" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
             </div>
             <form id="weightForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Date</label>
-                    <input type="date" id="logDate" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
+                    <label class="block text-[11px] font-medium text-gray-400 mb-1">Date</label>
+                    <input type="date" id="logDate" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Weight (kg)</label>
-                    <input type="number" step="0.1" id="logWeight" placeholder="70.1" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
+                    <label class="block text-[11px] font-medium text-gray-400 mb-1">Morning Weight (kg)</label>
+                    <input type="number" step="0.1" id="logWeight" placeholder="70.1" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-white text-lg font-bold focus:outline-none focus:border-indigo-500">
                 </div>
                 
                 <!-- Quick Offset Buttons -->
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Quick Adjust Last Weight</label>
+                    <label class="block text-[11px] font-medium text-gray-400 mb-1.5">Quick Adjust</label>
                     <div class="grid grid-cols-4 gap-2">
-                        <button type="button" onclick="adjustQuick(-0.5)" class="bg-gray-800 hover:bg-gray-700 text-xs py-2 rounded-lg text-gray-300">-0.5</button>
-                        <button type="button" onclick="adjustQuick(-0.2)" class="bg-gray-800 hover:bg-gray-700 text-xs py-2 rounded-lg text-gray-300">-0.2</button>
-                        <button type="button" onclick="adjustQuick(0.2)" class="bg-gray-800 hover:bg-gray-700 text-xs py-2 rounded-lg text-gray-300">+0.2</button>
-                        <button type="button" onclick="adjustQuick(0.5)" class="bg-gray-800 hover:bg-gray-700 text-xs py-2 rounded-lg text-gray-300">+0.5</button>
+                        <button type="button" onclick="adjustQuick(-0.3)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">-0.3</button>
+                        <button type="button" onclick="adjustQuick(-0.1)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">-0.1</button>
+                        <button type="button" onclick="adjustQuick(0.1)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">+0.1</button>
+                        <button type="button" onclick="adjustQuick(0.3)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">+0.3</button>
                     </div>
                 </div>
 
-                <div class="flex space-x-3 pt-2">
-                    <button type="button" onclick="closeLogModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium py-2.5 rounded-xl text-sm transition">Cancel</button>
-                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-indigo-600/20">Save Entry</button>
+                <div class="flex space-x-2.5 pt-2">
+                    <button type="button" onclick="closeLogModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium py-2.5 rounded-xl text-xs transition">Cancel</button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-indigo-600/20">Save Weight</button>
                 </div>
             </form>
         </div>
@@ -160,16 +227,59 @@
 
         let entries = JSON.parse(localStorage.getItem('sleekweight_entries'));
         if (!entries || entries.length === 0) {
-            entries = defaultEntries;
+            entries = [...defaultEntries];
         }
+        let targetWeight = parseFloat(localStorage.getItem('sleekweight_target')) || 69.5;
         let weightChart = null;
+
+        // Format YYYY-MM-DD to Slovak DD.MM. or DD.MM.YYYY
+        function formatSlovakDate(isoDate, includeYear = false) {
+            if (!isoDate) return '--';
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return isoDate;
+            const day = parseInt(parts[2], 10);
+            const month = parseInt(parts[1], 10);
+            return includeYear ? `${day}.${month}.${parts[0]}` : `${day}.${month}.`;
+        }
+
+        // Get Monday of the week for a given YYYY-MM-DD string
+        function getMondayKey(isoDate) {
+            const [y, m, d] = isoDate.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(date.setDate(diff));
+            const my = monday.getFullYear();
+            const mm = String(monday.getMonth() + 1).padStart(2, '0');
+            const md = String(monday.getDate()).padStart(2, '0');
+            return `${my}-${mm}-${md}`;
+        }
+
+        function getSundayFromMonday(mondayIso) {
+            const [y, m, d] = mondayIso.split('-').map(Number);
+            const date = new Date(y, m - 1, d + 6);
+            const sy = date.getFullYear();
+            const sm = String(date.getMonth() + 1).padStart(2, '0');
+            const sd = String(date.getDate()).padStart(2, '0');
+            return `${sy}-${sm}-${sd}`;
+        }
 
         function saveToStorage() {
             localStorage.setItem('sleekweight_entries', JSON.stringify(entries));
+            localStorage.setItem('sleekweight_target', targetWeight.toString());
         }
 
         function sortEntries() {
-            entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+            entries.sort((a, b) => a.date.localeCompare(b.date));
+        }
+
+        function computeMovingAverage(data, windowSize = 7) {
+            return data.map((_, idx) => {
+                const start = Math.max(0, idx - windowSize + 1);
+                const slice = data.slice(start, idx + 1);
+                const sum = slice.reduce((acc, item) => acc + item.weight, 0);
+                return +(sum / slice.length).toFixed(2);
+            });
         }
 
         function initApp() {
@@ -181,56 +291,164 @@
         function renderDashboard() {
             if (entries.length === 0) return;
 
-            const latest = entries[entries.length - 1];
-            
-            // Current weight & Date
-            document.getElementById('currentWeightDisplay').innerText = latest.weight.toFixed(1) + ' kg';
-            document.getElementById('currentDateDisplay').innerText = 'Recorded on ' + latest.date;
+            document.getElementById('targetBadge').innerText = `Goal: ${targetWeight.toFixed(1)} kg ✎`;
+            document.getElementById('entryCountBadge').innerText = `${entries.length} entries`;
 
-            // 7-day trend average
+            const latest = entries[entries.length - 1];
+            document.getElementById('currentWeightDisplay').innerText = `${latest.weight.toFixed(1)} kg`;
+            document.getElementById('currentDateDisplay').innerText = formatSlovakDate(latest.date, true);
+
+            // 7-day trend average (last 7 entries)
             const last7 = entries.slice(-7);
             const avg7 = last7.reduce((acc, curr) => acc + curr.weight, 0) / last7.length;
-            document.getElementById('weeklyAvgDisplay').innerText = avg7.toFixed(1) + ' kg';
+            document.getElementById('weeklyAvgDisplay').innerText = `${avg7.toFixed(1)} kg`;
 
-            // Total change from start
-            const totalDiff = latest.weight - entries[0].weight;
-            const diffElem = document.getElementById('totalChangeDisplay');
-            diffElem.innerText = (totalDiff > 0 ? '+' : '') + totalDiff.toFixed(1) + ' kg';
-
-            // Diff badge compared to previous entry
+            // Diff badge vs previous entry
+            const badge = document.getElementById('weightDiffBadge');
             if (entries.length > 1) {
                 const prev = entries[entries.length - 2];
                 const diff = latest.weight - prev.weight;
-                const badge = document.getElementById('weightDiffBadge');
-                badge.innerText = (diff > 0 ? '+' : '') + diff.toFixed(1) + ' kg vs last';
-                badge.className = `text-xs font-semibold px-2 py-0.5 rounded-full ${diff <= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`;
+                badge.innerText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg`;
+                badge.className = `text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${diff <= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`;
+            } else {
+                badge.innerText = 'Start';
             }
 
-            // Render table
+            // Total change from October lock-in (or earliest entry)
+            const octEntry = entries.find(e => e.date >= '2026-10-01') || entries[0];
+            const totalDiff = latest.weight - entries[0].weight;
+            document.getElementById('totalChangeDisplay').innerText = `${totalDiff > 0 ? '+' : ''}${totalDiff.toFixed(1)} kg`;
+
+            // Weekly Overview Calculation
+            const weekMap = {};
+            entries.forEach(entry => {
+                const monKey = getMondayKey(entry.date);
+                if (!weekMap[monKey]) weekMap[monKey] = [];
+                weekMap[monKey].push(entry);
+            });
+
+            const sortedWeeks = Object.keys(weekMap).sort();
+            const weeklySummaries = sortedWeeks.map((monKey, idx) => {
+                const weekEntries = weekMap[monKey];
+                const avg = weekEntries.reduce((s, e) => s + e.weight, 0) / weekEntries.length;
+                const sunKey = getSundayFromMonday(monKey);
+                return {
+                    monKey,
+                    label: `${formatSlovakDate(monKey)} – ${formatSlovakDate(sunKey)}`,
+                    count: weekEntries.length,
+                    avg
+                };
+            });
+
+            // Calculate Weekly Pace & Status from recent weeks
+            const weeklyRateElem = document.getElementById('weeklyRateDisplay');
+            const paceStatusElem = document.getElementById('paceStatusText');
+            const goalEtaElem = document.getElementById('goalEtaDisplay');
+
+            if (weeklySummaries.length >= 2) {
+                const recentWeeks = weeklySummaries.slice(-4);
+                const firstRecent = recentWeeks[0].avg;
+                const lastRecent = recentWeeks[recentWeeks.length - 1].avg;
+                const weeksSpan = recentWeeks.length - 1;
+                const avgWeeklyChange = (lastRecent - firstRecent) / weeksSpan;
+
+                weeklyRateElem.innerText = `${avgWeeklyChange > 0 ? '+' : ''}${avgWeeklyChange.toFixed(2)} kg/wk`;
+                
+                if (avgWeeklyChange <= -0.35 && avgWeeklyChange >= -0.95) {
+                    weeklyRateElem.className = 'text-2xl font-bold text-emerald-400';
+                    paceStatusElem.innerText = 'Sweet spot fat loss';
+                } else if (avgWeeklyChange < -0.95) {
+                    weeklyRateElem.className = 'text-2xl font-bold text-amber-400';
+                    paceStatusElem.innerText = 'Aggressive drop';
+                } else if (avgWeeklyChange < 0) {
+                    weeklyRateElem.className = 'text-2xl font-bold text-indigo-400';
+                    paceStatusElem.innerText = 'Steady lean cut';
+                } else {
+                    weeklyRateElem.className = 'text-2xl font-bold text-rose-400';
+                    paceStatusElem.innerText = 'Plateau / water hold';
+                }
+
+                // Goal ETA
+                const remaining = latest.weight - targetWeight;
+                if (remaining <= 0) {
+                    goalEtaElem.innerText = 'Goal reached!';
+                } else if (avgWeeklyChange < -0.05) {
+                    const weeksLeft = Math.ceil(remaining / Math.abs(avgWeeklyChange));
+                    goalEtaElem.innerText = `~${weeksLeft} wk${weeksLeft === 1 ? '' : 's'} to ${targetWeight.toFixed(1)} kg`;
+                } else {
+                    goalEtaElem.innerText = `${remaining.toFixed(1)} kg to goal`;
+                }
+            } else {
+                weeklyRateElem.innerText = '--';
+            }
+
+            // Render Weekly Table (Newest week first)
+            const weeklyTbody = document.getElementById('weeklyTableBody');
+            weeklyTbody.innerHTML = '';
+
+            [...weeklySummaries].reverse().forEach((wk, revIdx) => {
+                const actualIdx = weeklySummaries.length - 1 - revIdx;
+                const prevWk = actualIdx > 0 ? weeklySummaries[actualIdx - 1] : null;
+                const diff = prevWk ? wk.avg - prevWk.avg : null;
+
+                let statusBadge = '<span class="text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full text-[10px]">Baseline</span>';
+                if (diff !== null) {
+                    if (diff <= -0.4 && diff >= -1.0) {
+                        statusBadge = '<span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Dialed In</span>';
+                    } else if (diff < -1.0) {
+                        statusBadge = '<span class="text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Fast Drop</span>';
+                    } else if (diff < 0) {
+                        statusBadge = '<span class="text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Steady</span>';
+                    } else {
+                        statusBadge = '<span class="text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Stall / Hold</span>';
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/30 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <div class="text-gray-200 font-medium">${wk.label}</div>
+                        <div class="text-[10px] text-gray-500">${wk.count} weigh-in${wk.count === 1 ? '' : 's'}</div>
+                    </td>
+                    <td class="py-3 px-4 text-white font-bold">${wk.avg.toFixed(1)} kg</td>
+                    <td class="py-3 px-4 font-medium ${diff === null ? 'text-gray-500' : diff <= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${diff === null ? '--' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg`}
+                    </td>
+                    <td class="py-3 px-4 text-right">${statusBadge}</td>
+                `;
+                weeklyTbody.appendChild(tr);
+            });
+
+            // Render Daily History Table (Newest first)
             const tbody = document.getElementById('logTableBody');
             tbody.innerHTML = '';
             
             [...entries].reverse().forEach((entry, index) => {
                 const actualIdx = entries.length - 1 - index;
                 const prevEntry = actualIdx > 0 ? entries[actualIdx - 1] : null;
-                const diff = prevEntry ? (entry.weight - prevEntry.weight).toFixed(1) : '--';
+                const diff = prevEntry ? (entry.weight - prevEntry.weight) : null;
                 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-800/30 transition';
                 tr.innerHTML = `
-                    <td class="py-3 px-5 text-gray-300 font-medium">${entry.date}</td>
-                    <td class="py-3 px-5 text-white font-bold">${entry.weight.toFixed(1)} kg</td>
-                    <td class="py-3 px-5 text-xs ${diff < 0 ? 'text-emerald-400' : diff > 0 ? 'text-rose-400' : 'text-gray-500'}">${diff !== '--' ? (diff <= 0 ? diff + ' kg' : '+' + diff + ' kg') : '--'}</td>
-                    <td class="py-3 px-5 text-right">
-                        <button onclick="deleteEntry(${actualIdx})" class="text-gray-500 hover:text-rose-400 text-xs px-2 py-1 transition">Delete</button>
+                    <td class="py-2.5 px-4 text-gray-300 font-medium">${formatSlovakDate(entry.date, true)}</td>
+                    <td class="py-2.5 px-4 text-white font-bold">${entry.weight.toFixed(1)} kg</td>
+                    <td class="py-2.5 px-4 ${diff === null ? 'text-gray-500' : diff <= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${diff === null ? '--' : `${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg`}
+                    </td>
+                    <td class="py-2.5 px-4 text-right">
+                        <button onclick="deleteEntry(${actualIdx})" class="text-gray-500 hover:text-rose-400 px-2 py-1 transition">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
+            // Update Chart
             if (weightChart) {
-                weightChart.data.labels = entries.map(e => e.date);
+                weightChart.data.labels = entries.map(e => formatSlovakDate(e.date, false));
                 weightChart.data.datasets[0].data = entries.map(e => e.weight);
+                weightChart.data.datasets[1].data = computeMovingAverage(entries, 7);
                 weightChart.update();
             }
         }
@@ -240,33 +458,56 @@
             weightChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: entries.map(e => e.date),
-                    datasets: [{
-                        label: 'Weight (kg)',
-                        data: entries.map(e => e.weight),
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#6366f1',
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.3
-                    }]
+                    labels: entries.map(e => formatSlovakDate(e.date, false)),
+                    datasets: [
+                        {
+                            label: 'Daily (kg)',
+                            data: entries.map(e => e.weight),
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#6366f1',
+                            pointRadius: 3.5,
+                            fill: true,
+                            tension: 0.25
+                        },
+                        {
+                            label: '7-Day Trend (kg)',
+                            data: computeMovingAverage(entries, 7),
+                            borderColor: '#34d399',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.35
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                            titleColor: '#f3f4f6',
+                            bodyColor: '#d1d5db',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1
+                        }
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: { color: '#9ca3af', font: { size: 10 }, maxRotation: 0 }
                         },
                         y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                            ticks: { color: '#9ca3af', font: { size: 10 } }
                         }
                     }
                 }
@@ -275,10 +516,11 @@
 
         function openLogModal() {
             document.getElementById('logModal').classList.remove('hidden');
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('logDate').value = today;
+            const now = new Date();
+            const localIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            document.getElementById('logDate').value = localIso;
             if (entries.length > 0) {
-                document.getElementById('logWeight').value = entries[entries.length - 1].weight;
+                document.getElementById('logWeight').value = entries[entries.length - 1].weight.toFixed(1);
             }
         }
 
@@ -297,7 +539,7 @@
             const date = document.getElementById('logDate').value;
             const weight = parseFloat(document.getElementById('logWeight').value);
 
-            const existingIndex = entries.findIndex(e => e.date === date);
+            const existingIndex = entries.findIndex(item => item.date === date);
             if (existingIndex >= 0) {
                 entries[existingIndex].weight = weight;
             } else {
@@ -310,8 +552,17 @@
             closeLogModal();
         }
 
+        function editTargetWeight() {
+            const val = prompt('Set target goal weight (kg):', targetWeight.toFixed(1));
+            if (val !== null && !isNaN(parseFloat(val))) {
+                targetWeight = parseFloat(val);
+                saveToStorage();
+                renderDashboard();
+            }
+        }
+
         function deleteEntry(index) {
-            if (confirm('Delete this entry?')) {
+            if (confirm(`Delete entry from ${formatSlovakDate(entries[index].date, true)}?`)) {
                 entries.splice(index, 1);
                 saveToStorage();
                 renderDashboard();
@@ -319,11 +570,46 @@
         }
 
         function resetToDefaultData() {
-            if (confirm('Reset to your recorded cutting history starting from late summer?')) {
+            if (confirm('Reset to default cutting history?')) {
                 entries = [...defaultEntries];
                 saveToStorage();
                 renderDashboard();
             }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify({ targetWeight, entries }, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sleekweight_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed)) {
+                        entries = parsed;
+                    } else if (parsed.entries && Array.isArray(parsed.entries)) {
+                        entries = parsed.entries;
+                        if (parsed.targetWeight) targetWeight = parsed.targetWeight;
+                    }
+                    saveToStorage();
+                    sortEntries();
+                    renderDashboard();
+                    alert('Backup restored!');
+                } catch (err) {
+                    alert('Invalid backup file.');
+                }
+            };
+            reader.readAsText(file);
         }
 
         window.onload = initApp;
