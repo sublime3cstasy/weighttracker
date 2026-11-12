@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>SleekWeight - Cutting Analytics</title>
+    <title>SleekWeight - Cut & Body Comp Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,45 +17,52 @@
             -webkit-tap-highlight-color: transparent;
         }
         .glass-card {
-            background: rgba(17, 24, 39, 0.75);
+            background: rgba(17, 24, 39, 0.78);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        /* Hide scrollbar for clean mobile look */
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.35);
             border-radius: 4px;
         }
     </style>
 </head>
 <body class="min-h-screen pb-14">
     <!-- Header -->
-    <header class="border-b border-gray-800 bg-gray-900/70 sticky top-0 z-40 backdrop-blur-md">
-        <div class="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
+    <header class="border-b border-gray-800 bg-gray-900/75 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-2.5">
                 <div class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-lg">
                     ⚖️
                 </div>
                 <div>
-                    <h1 class="font-bold text-base text-white leading-tight">SleekWeight</h1>
-                    <p class="text-[11px] text-gray-400">Cut Analytics & Weekly Pace</p>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="font-bold text-base text-white leading-tight">SleekWeight</h1>
+                        <span id="consistencyBadge" class="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">--/7d</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5 mt-0.5">
+                        <button onclick="togglePhaseMode()" id="phaseToggleBtn" class="text-[10px] font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 flex items-center space-x-1">
+                            <span id="phaseLabel">Mode: Cut</span>
+                            <span>⇄</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <button onclick="openLogModal()" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition shadow-lg shadow-indigo-600/20 flex items-center space-x-1.5">
-                <span>+ Log Weight</span>
+            <button onclick="openLogModal()" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition shadow-lg shadow-indigo-600/20">
+                + Log
             </button>
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto px-4 mt-5 space-y-5">
-        <!-- Top KPI Cards -->
+    <main class="max-w-4xl mx-auto px-4 mt-4 space-y-4">
+        <!-- Top 4 KPI Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="glass-card p-4 rounded-2xl">
-                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Current</p>
+            <div class="glass-card p-3.5 rounded-2xl">
+                <p class="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Current</p>
                 <div class="flex items-baseline space-x-1.5 mt-1">
                     <span id="currentWeightDisplay" class="text-2xl font-bold text-white">-- kg</span>
                 </div>
@@ -65,48 +72,112 @@
                 </div>
             </div>
 
-            <div class="glass-card p-4 rounded-2xl">
-                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">7-Day Avg</p>
+            <div class="glass-card p-3.5 rounded-2xl">
+                <p class="text-[10px] font-medium text-gray-400 uppercase tracking-wider">7-Day Avg</p>
                 <div class="flex items-baseline space-x-1.5 mt-1">
                     <span id="weeklyAvgDisplay" class="text-2xl font-bold text-emerald-400">-- kg</span>
                 </div>
-                <p class="text-[11px] text-gray-500 mt-1.5">True smoothed weight</p>
+                <p id="avgDeltaSubtext" class="text-[11px] text-gray-500 mt-1.5">Smoothed trend</p>
             </div>
 
-            <div class="glass-card p-4 rounded-2xl">
-                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Weekly Pace</p>
+            <div class="glass-card p-3.5 rounded-2xl">
+                <p class="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Weekly Pace</p>
                 <div class="flex items-baseline space-x-1.5 mt-1">
                     <span id="weeklyRateDisplay" class="text-2xl font-bold text-white">--</span>
                 </div>
-                <p id="paceStatusText" class="text-[11px] text-gray-500 mt-1.5">Target: -0.5 to -0.8 kg/wk</p>
+                <p id="paceStatusText" class="text-[11px] text-gray-500 mt-1.5">--</p>
             </div>
 
-            <div class="glass-card p-4 rounded-2xl">
-                <p class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Total Lost</p>
+            <div class="glass-card p-3.5 rounded-2xl">
+                <p id="fourthCardTitle" class="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Total Lost</p>
                 <div class="flex items-baseline space-x-1.5 mt-1">
                     <span id="totalChangeDisplay" class="text-2xl font-bold text-indigo-400">-- kg</span>
                 </div>
-                <p id="goalEtaDisplay" class="text-[11px] text-gray-500 mt-1.5">Since start</p>
+                <p id="goalEtaDisplay" class="text-[11px] text-gray-500 mt-1.5">--</p>
             </div>
         </div>
 
-        <!-- Chart Section -->
-        <div class="glass-card p-5 rounded-2xl">
+        <!-- Chart Section with Timeframe Filters -->
+        <div class="glass-card p-4 rounded-2xl">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div>
-                    <h2 class="font-semibold text-white text-sm">Weight Trajectory</h2>
-                    <p class="text-[11px] text-gray-400">Raw weigh-ins vs. 7-day moving trend</p>
+                <div class="flex items-center space-x-2">
+                    <h2 class="font-semibold text-white text-sm">Trajectory</h2>
+                    <div class="flex bg-gray-900/90 p-0.5 rounded-lg border border-gray-800 text-[10px]">
+                        <button onclick="setChartRange('14')" id="range-14" class="px-2 py-0.5 rounded-md text-gray-400 hover:text-white transition">14D</button>
+                        <button onclick="setChartRange('30')" id="range-30" class="px-2 py-0.5 rounded-md bg-indigo-600 text-white font-semibold transition">30D</button>
+                        <button onclick="setChartRange('all')" id="range-all" class="px-2 py-0.5 rounded-md text-gray-400 hover:text-white transition">All</button>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-3 text-[11px]">
-                    <span class="flex items-center text-gray-300"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-1.5"></span>Daily</span>
-                    <span class="flex items-center text-gray-300"><span class="w-2.5 h-0.5 bg-emerald-400 mr-1.5"></span>Trend</span>
-                    <button onclick="editTargetWeight()" id="targetBadge" class="text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/20 transition">
+                <div class="flex items-center space-x-2.5 text-[10px]">
+                    <span class="flex items-center text-gray-300"><span class="w-2 h-2 rounded-full bg-indigo-500 mr-1"></span>Daily</span>
+                    <span class="flex items-center text-gray-300"><span class="w-2 h-2 rounded-full bg-amber-400 mr-1"></span>Tagged</span>
+                    <span class="flex items-center text-gray-300"><span class="w-2.5 h-0.5 bg-emerald-400 mr-1"></span>Trend</span>
+                    <button onclick="editTargetWeight()" id="targetBadge" class="text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-500/20 transition">
                         Goal: 69.5 kg ✎
                     </button>
                 </div>
             </div>
-            <div class="relative h-64 w-full">
+            <div class="relative h-60 w-full">
                 <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Metabolism (TDEE) & Body Composition Card -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- True TDEE & Deficit Calculator -->
+            <div class="glass-card p-4 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h2 class="font-semibold text-white text-sm">True TDEE & Deficit</h2>
+                            <p class="text-[11px] text-gray-400">Calculated from intake vs. actual scale rate</p>
+                        </div>
+                        <button onclick="editAvgCalories()" class="text-[11px] text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/20 transition">
+                            Intake: <span id="avgCaloriesDisplay">2050</span> kcal ✎
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-800/80">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Est. Real TDEE</p>
+                            <p id="estimatedTdeeDisplay" class="text-xl font-bold text-white mt-0.5">-- kcal</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Actual Daily Deficit</p>
+                            <p id="actualDeficitDisplay" class="text-xl font-bold text-emerald-400 mt-0.5">-- kcal</p>
+                        </div>
+                    </div>
+                </div>
+                <p id="tdeeNoteText" class="text-[10px] text-gray-500 mt-3">Uses 7,700 kcal/kg energy density over your recent weekly trend.</p>
+            </div>
+
+            <!-- Waist & Body Fat % Estimator -->
+            <div class="glass-card p-4 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h2 class="font-semibold text-white text-sm">Body Comp & Waist</h2>
+                            <p class="text-[11px] text-gray-400">Tracks fat loss even during water stalls</p>
+                        </div>
+                        <button onclick="editBodyMetrics()" class="text-[11px] text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition">
+                            Update Waist/Neck ✎
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-800/80">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Waist</p>
+                            <p id="waistDisplay" class="text-lg font-bold text-white mt-0.5">-- cm</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Est. Body Fat</p>
+                            <p id="bodyFatDisplay" class="text-lg font-bold text-indigo-400 mt-0.5">-- %</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Waist/Height</p>
+                            <p id="whtrDisplay" class="text-lg font-bold text-emerald-400 mt-0.5">--</p>
+                        </div>
+                    </div>
+                </div>
+                <p id="bodyCompNote" class="text-[10px] text-gray-500 mt-3">U.S. Navy formula (Height: 187 cm). Target BF: 10–12%.</p>
             </div>
         </div>
 
@@ -117,7 +188,7 @@
                     <h2 class="font-semibold text-white text-sm">Weekly Overview</h2>
                     <p class="text-[11px] text-gray-400">Week-over-week averages (Mon – Sun)</p>
                 </div>
-                <span class="text-[11px] text-gray-400 bg-gray-800/80 px-2.5 py-1 rounded-lg">Best cut metric</span>
+                <span class="text-[10px] text-gray-400 bg-gray-800/80 px-2.5 py-1 rounded-lg">True trend metric</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -126,11 +197,10 @@
                             <th class="py-2.5 px-4">Week</th>
                             <th class="py-2.5 px-4">Avg Weight</th>
                             <th class="py-2.5 px-4">vs Prev Wk</th>
-                            <th class="py-2.5 px-4 text-right">Cut Status</th>
+                            <th class="py-2.5 px-4 text-right">Status</th>
                         </tr>
                     </thead>
                     <tbody id="weeklyTableBody" class="divide-y divide-gray-800/50 text-xs">
-                        <!-- Populated via JS -->
                     </tbody>
                 </table>
             </div>
@@ -147,20 +217,19 @@
                     <thead class="sticky top-0 bg-gray-900 z-10">
                         <tr class="border-b border-gray-800 text-[11px] text-gray-400">
                             <th class="py-2.5 px-4">Date</th>
-                            <th class="py-2.5 px-4">Weight</th>
+                            <th class="py-2.5 px-4">Weight & Context</th>
                             <th class="py-2.5 px-4">Change</th>
                             <th class="py-2.5 px-4 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody id="logTableBody" class="divide-y divide-gray-800/50 text-xs">
-                        <!-- Populated via JS -->
                     </tbody>
                 </table>
             </div>
         </div>
 
         <!-- Data Backup Footer -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 px-1 text-[11px] text-gray-500">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1 px-1 text-[11px] text-gray-500">
             <div class="flex items-center space-x-3">
                 <button onclick="exportData()" class="hover:text-gray-300 underline">Export Backup</button>
                 <span>•</span>
@@ -173,7 +242,7 @@
         </div>
     </main>
 
-    <!-- Modal for Logging -->
+    <!-- Modal for Logging Weight & Tags -->
     <div id="logModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card bg-gray-900 border border-gray-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -183,21 +252,32 @@
             <form id="weightForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1">Date</label>
-                    <input type="date" id="logDate" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
+                    <input type="date" id="logDate" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1">Morning Weight (kg)</label>
-                    <input type="number" step="0.1" id="logWeight" placeholder="70.1" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-white text-lg font-bold focus:outline-none focus:border-indigo-500">
+                    <input type="number" step="0.1" id="logWeight" placeholder="70.1" required class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-white text-lg font-bold focus:outline-none focus:border-indigo-500">
                 </div>
                 
                 <!-- Quick Offset Buttons -->
                 <div>
                     <label class="block text-[11px] font-medium text-gray-400 mb-1.5">Quick Adjust</label>
                     <div class="grid grid-cols-4 gap-2">
-                        <button type="button" onclick="adjustQuick(-0.3)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">-0.3</button>
-                        <button type="button" onclick="adjustQuick(-0.1)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">-0.1</button>
-                        <button type="button" onclick="adjustQuick(0.1)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">+0.1</button>
-                        <button type="button" onclick="adjustQuick(0.3)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-2 rounded-lg text-gray-300 font-medium">+0.3</button>
+                        <button type="button" onclick="adjustQuick(-0.3)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-1.5 rounded-lg text-gray-300 font-medium">-0.3</button>
+                        <button type="button" onclick="adjustQuick(-0.1)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-1.5 rounded-lg text-gray-300 font-medium">-0.1</button>
+                        <button type="button" onclick="adjustQuick(0.1)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-1.5 rounded-lg text-gray-300 font-medium">+0.1</button>
+                        <button type="button" onclick="adjustQuick(0.3)" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-xs py-1.5 rounded-lg text-gray-300 font-medium">+0.3</button>
+                    </div>
+                </div>
+
+                <!-- Context Tags -->
+                <div>
+                    <label class="block text-[11px] font-medium text-gray-400 mb-1.5">Context Tag (Optional — explains water spikes)</label>
+                    <div class="flex flex-wrap gap-1.5" id="tagSelector">
+                        <button type="button" onclick="toggleTag('Refeed')" data-tag="Refeed" class="tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 transition">🍕 Refeed</button>
+                        <button type="button" onclick="toggleTag('Salty')" data-tag="Salty" class="tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 transition">🧂 Salty</button>
+                        <button type="button" onclick="toggleTag('Poor Sleep')" data-tag="Poor Sleep" class="tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 transition">😴 Poor Sleep</button>
+                        <button type="button" onclick="toggleTag('High Carb')" data-tag="High Carb" class="tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 transition">🍝 High Carb</button>
                     </div>
                 </div>
 
@@ -211,28 +291,38 @@
 
     <script>
         const defaultEntries = [
-            { date: '2026-09-01', weight: 76.2 },
-            { date: '2026-09-10', weight: 75.8 },
-            { date: '2026-09-20', weight: 75.5 },
-            { date: '2026-10-01', weight: 75.0 },
-            { date: '2026-10-05', weight: 74.3 },
-            { date: '2026-10-10', weight: 73.6 },
-            { date: '2026-10-15', weight: 72.8 },
-            { date: '2026-10-20', weight: 72.1 },
-            { date: '2026-10-25', weight: 71.5 },
-            { date: '2026-10-30', weight: 70.8 },
-            { date: '2026-11-05', weight: 70.3 },
-            { date: '2026-11-08', weight: 70.1 }
+            { date: '2026-09-01', weight: 76.2, tag: '' },
+            { date: '2026-09-10', weight: 75.8, tag: '' },
+            { date: '2026-09-20', weight: 75.5, tag: '' },
+            { date: '2026-10-01', weight: 75.0, tag: '' },
+            { date: '2026-10-05', weight: 74.3, tag: '' },
+            { date: '2026-10-10', weight: 73.6, tag: '' },
+            { date: '2026-10-15', weight: 72.8, tag: '' },
+            { date: '2026-10-20', weight: 72.1, tag: '' },
+            { date: '2026-10-25', weight: 71.5, tag: '' },
+            { date: '2026-10-30', weight: 70.8, tag: '' },
+            { date: '2026-11-05', weight: 70.3, tag: '' },
+            { date: '2026-11-08', weight: 70.1, tag: '' }
         ];
 
         let entries = JSON.parse(localStorage.getItem('sleekweight_entries'));
         if (!entries || entries.length === 0) {
             entries = [...defaultEntries];
         }
-        let targetWeight = parseFloat(localStorage.getItem('sleekweight_target')) || 69.5;
+
+        let settings = JSON.parse(localStorage.getItem('sleekweight_settings')) || {
+            targetWeight: 69.5,
+            mode: 'cut', // 'cut' or 'maintenance'
+            avgCalories: 2050,
+            heightCm: 187,
+            waistCm: 76.5,
+            neckCm: 37.5,
+            chartRange: 'all'
+        };
+
+        let selectedTag = '';
         let weightChart = null;
 
-        // Format YYYY-MM-DD to Slovak DD.MM. or DD.MM.YYYY
         function formatSlovakDate(isoDate, includeYear = false) {
             if (!isoDate) return '--';
             const parts = isoDate.split('-');
@@ -242,31 +332,24 @@
             return includeYear ? `${day}.${month}.${parts[0]}` : `${day}.${month}.`;
         }
 
-        // Get Monday of the week for a given YYYY-MM-DD string
         function getMondayKey(isoDate) {
             const [y, m, d] = isoDate.split('-').map(Number);
             const date = new Date(y, m - 1, d);
             const day = date.getDay();
             const diff = date.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(date.setDate(diff));
-            const my = monday.getFullYear();
-            const mm = String(monday.getMonth() + 1).padStart(2, '0');
-            const md = String(monday.getDate()).padStart(2, '0');
-            return `${my}-${mm}-${md}`;
+            return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
         }
 
         function getSundayFromMonday(mondayIso) {
             const [y, m, d] = mondayIso.split('-').map(Number);
             const date = new Date(y, m - 1, d + 6);
-            const sy = date.getFullYear();
-            const sm = String(date.getMonth() + 1).padStart(2, '0');
-            const sd = String(date.getDate()).padStart(2, '0');
-            return `${sy}-${sm}-${sd}`;
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
-        function saveToStorage() {
+        function saveAll() {
             localStorage.setItem('sleekweight_entries', JSON.stringify(entries));
-            localStorage.setItem('sleekweight_target', targetWeight.toString());
+            localStorage.setItem('sleekweight_settings', JSON.stringify(settings));
         }
 
         function sortEntries() {
@@ -282,8 +365,16 @@
             });
         }
 
+        // U.S. Navy Body Fat Formula (Male)
+        function calculateNavyBodyFat(heightCm, waistCm, neckCm) {
+            if (!heightCm || !waistCm || !neckCm || waistCm <= neckCm) return null;
+            const bf = 495 / (1.0324 - 0.19077 * Math.log10(waistCm - neckCm) + 0.15456 * Math.log10(heightCm)) - 450;
+            return Math.max(3, Math.min(50, bf));
+        }
+
         function initApp() {
             sortEntries();
+            updateRangeButtons();
             renderDashboard();
             initChart();
         }
@@ -291,35 +382,49 @@
         function renderDashboard() {
             if (entries.length === 0) return;
 
-            document.getElementById('targetBadge').innerText = `Goal: ${targetWeight.toFixed(1)} kg ✎`;
+            const isCut = settings.mode === 'cut';
+            document.getElementById('phaseLabel').innerText = isCut ? 'Mode: Cut' : 'Mode: Maintain';
+            document.getElementById('targetBadge').innerText = `${isCut ? 'Goal' : 'Anchor'}: ${settings.targetWeight.toFixed(1)} kg ✎`;
             document.getElementById('entryCountBadge').innerText = `${entries.length} entries`;
 
+            // Consistency over last 7 calendar days from latest entry
             const latest = entries[entries.length - 1];
+            const [ly, lm, ld] = latest.date.split('-').map(Number);
+            const latestDateObj = new Date(ly, lm - 1, ld);
+            const sevenDaysAgo = new Date(ly, lm - 1, ld - 6);
+            const last7CalendarCount = entries.filter(e => {
+                const [ey, em, ed] = e.date.split('-').map(Number);
+                const d = new Date(ey, em - 1, ed);
+                return d >= sevenDaysAgo && d <= latestDateObj;
+            }).length;
+            document.getElementById('consistencyBadge').innerText = `${Math.min(7, last7CalendarCount)}/7d logged`;
+
+            // Current Weight Card
             document.getElementById('currentWeightDisplay').innerText = `${latest.weight.toFixed(1)} kg`;
             document.getElementById('currentDateDisplay').innerText = formatSlovakDate(latest.date, true);
 
-            // 7-day trend average (last 7 entries)
-            const last7 = entries.slice(-7);
-            const avg7 = last7.reduce((acc, curr) => acc + curr.weight, 0) / last7.length;
-            document.getElementById('weeklyAvgDisplay').innerText = `${avg7.toFixed(1)} kg`;
-
-            // Diff badge vs previous entry
             const badge = document.getElementById('weightDiffBadge');
             if (entries.length > 1) {
                 const prev = entries[entries.length - 2];
                 const diff = latest.weight - prev.weight;
                 badge.innerText = `${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg`;
-                badge.className = `text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${diff <= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`;
+                if (isCut) {
+                    badge.className = `text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${diff <= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`;
+                } else {
+                    badge.className = `text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${Math.abs(diff) <= 0.4 ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'}`;
+                }
             } else {
                 badge.innerText = 'Start';
             }
 
-            // Total change from October lock-in (or earliest entry)
-            const octEntry = entries.find(e => e.date >= '2026-10-01') || entries[0];
-            const totalDiff = latest.weight - entries[0].weight;
-            document.getElementById('totalChangeDisplay').innerText = `${totalDiff > 0 ? '+' : ''}${totalDiff.toFixed(1)} kg`;
+            // 7-Day Moving Average Card
+            const last7 = entries.slice(-7);
+            const avg7 = last7.reduce((acc, curr) => acc + curr.weight, 0) / last7.length;
+            document.getElementById('weeklyAvgDisplay').innerText = `${avg7.toFixed(1)} kg`;
+            const diffFromAvg = latest.weight - avg7;
+            document.getElementById('avgDeltaSubtext').innerText = `${diffFromAvg >= 0 ? '+' : ''}${diffFromAvg.toFixed(1)} kg vs trend`;
 
-            // Weekly Overview Calculation
+            // Weekly Grouping
             const weekMap = {};
             entries.forEach(entry => {
                 const monKey = getMondayKey(entry.date);
@@ -328,7 +433,7 @@
             });
 
             const sortedWeeks = Object.keys(weekMap).sort();
-            const weeklySummaries = sortedWeeks.map((monKey, idx) => {
+            const weeklySummaries = sortedWeeks.map(monKey => {
                 const weekEntries = weekMap[monKey];
                 const avg = weekEntries.reduce((s, e) => s + e.weight, 0) / weekEntries.length;
                 const sunKey = getSundayFromMonday(monKey);
@@ -340,49 +445,98 @@
                 };
             });
 
-            // Calculate Weekly Pace & Status from recent weeks
+            // Weekly Pace & 4th Card (Total Lost vs Maintenance Corridor)
             const weeklyRateElem = document.getElementById('weeklyRateDisplay');
             const paceStatusElem = document.getElementById('paceStatusText');
+            const fourthTitle = document.getElementById('fourthCardTitle');
+            const totalChangeElem = document.getElementById('totalChangeDisplay');
             const goalEtaElem = document.getElementById('goalEtaDisplay');
 
+            let avgWeeklyChange = 0;
             if (weeklySummaries.length >= 2) {
                 const recentWeeks = weeklySummaries.slice(-4);
-                const firstRecent = recentWeeks[0].avg;
-                const lastRecent = recentWeeks[recentWeeks.length - 1].avg;
                 const weeksSpan = recentWeeks.length - 1;
-                const avgWeeklyChange = (lastRecent - firstRecent) / weeksSpan;
-
+                avgWeeklyChange = (recentWeeks[recentWeeks.length - 1].avg - recentWeeks[0].avg) / weeksSpan;
                 weeklyRateElem.innerText = `${avgWeeklyChange > 0 ? '+' : ''}${avgWeeklyChange.toFixed(2)} kg/wk`;
-                
-                if (avgWeeklyChange <= -0.35 && avgWeeklyChange >= -0.95) {
-                    weeklyRateElem.className = 'text-2xl font-bold text-emerald-400';
-                    paceStatusElem.innerText = 'Sweet spot fat loss';
-                } else if (avgWeeklyChange < -0.95) {
-                    weeklyRateElem.className = 'text-2xl font-bold text-amber-400';
-                    paceStatusElem.innerText = 'Aggressive drop';
-                } else if (avgWeeklyChange < 0) {
-                    weeklyRateElem.className = 'text-2xl font-bold text-indigo-400';
-                    paceStatusElem.innerText = 'Steady lean cut';
-                } else {
-                    weeklyRateElem.className = 'text-2xl font-bold text-rose-400';
-                    paceStatusElem.innerText = 'Plateau / water hold';
-                }
 
-                // Goal ETA
-                const remaining = latest.weight - targetWeight;
+                if (isCut) {
+                    if (avgWeeklyChange <= -0.35 && avgWeeklyChange >= -0.95) {
+                        weeklyRateElem.className = 'text-2xl font-bold text-emerald-400';
+                        paceStatusElem.innerText = 'Sweet spot fat loss';
+                    } else if (avgWeeklyChange < -0.95) {
+                        weeklyRateElem.className = 'text-2xl font-bold text-amber-400';
+                        paceStatusElem.innerText = 'Aggressive drop';
+                    } else if (avgWeeklyChange < 0) {
+                        weeklyRateElem.className = 'text-2xl font-bold text-indigo-400';
+                        paceStatusElem.innerText = 'Steady lean cut';
+                    } else {
+                        weeklyRateElem.className = 'text-2xl font-bold text-rose-400';
+                        paceStatusElem.innerText = 'Plateau / water hold';
+                    }
+                } else {
+                    if (Math.abs(avgWeeklyChange) <= 0.25) {
+                        weeklyRateElem.className = 'text-2xl font-bold text-emerald-400';
+                        paceStatusElem.innerText = 'Locked in maintenance';
+                    } else {
+                        weeklyRateElem.className = 'text-2xl font-bold text-amber-400';
+                        paceStatusElem.innerText = avgWeeklyChange > 0 ? 'Slight surplus' : 'Slight deficit';
+                    }
+                }
+            } else {
+                weeklyRateElem.innerText = '--';
+                paceStatusElem.innerText = 'Need 2+ weeks';
+            }
+
+            if (isCut) {
+                fourthTitle.innerText = 'Total Lost';
+                const totalDiff = latest.weight - entries[0].weight;
+                totalChangeElem.innerText = `${totalDiff > 0 ? '+' : ''}${totalDiff.toFixed(1)} kg`;
+                const remaining = latest.weight - settings.targetWeight;
                 if (remaining <= 0) {
                     goalEtaElem.innerText = 'Goal reached!';
                 } else if (avgWeeklyChange < -0.05) {
                     const weeksLeft = Math.ceil(remaining / Math.abs(avgWeeklyChange));
-                    goalEtaElem.innerText = `~${weeksLeft} wk${weeksLeft === 1 ? '' : 's'} to ${targetWeight.toFixed(1)} kg`;
+                    goalEtaElem.innerText = `~${weeksLeft} wk${weeksLeft === 1 ? '' : 's'} to ${settings.targetWeight.toFixed(1)} kg`;
                 } else {
                     goalEtaElem.innerText = `${remaining.toFixed(1)} kg to goal`;
                 }
             } else {
-                weeklyRateElem.innerText = '--';
+                fourthTitle.innerText = 'Corridor';
+                const variance = avg7 - settings.targetWeight;
+                totalChangeElem.innerText = `${variance >= 0 ? '+' : ''}${variance.toFixed(1)} kg`;
+                goalEtaElem.innerText = Math.abs(variance) <= 0.4 ? 'Inside ±0.4 kg zone' : 'Outside ±0.4 kg zone';
             }
 
-            // Render Weekly Table (Newest week first)
+            // True TDEE & Deficit Calculation
+            document.getElementById('avgCaloriesDisplay').innerText = settings.avgCalories;
+            const dailyDeltaKcal = (avgWeeklyChange * 7700) / 7; // negative when losing weight
+            const estimatedTdee = Math.round(settings.avgCalories - dailyDeltaKcal);
+            const actualDeficit = Math.round(-dailyDeltaKcal);
+
+            if (weeklySummaries.length >= 2) {
+                document.getElementById('estimatedTdeeDisplay').innerText = `${estimatedTdee} kcal`;
+                const defElem = document.getElementById('actualDeficitDisplay');
+                if (actualDeficit >= 0) {
+                    defElem.innerText = `-${actualDeficit} kcal/d`;
+                    defElem.className = 'text-xl font-bold text-emerald-400 mt-0.5';
+                } else {
+                    defElem.innerText = `+${Math.abs(actualDeficit)} kcal/d`;
+                    defElem.className = 'text-xl font-bold text-amber-400 mt-0.5';
+                }
+            } else {
+                document.getElementById('estimatedTdeeDisplay').innerText = '-- kcal';
+                document.getElementById('actualDeficitDisplay').innerText = '-- kcal';
+            }
+
+            // Body Composition Card
+            document.getElementById('waistDisplay').innerText = `${settings.waistCm.toFixed(1)} cm`;
+            const bf = calculateNavyBodyFat(settings.heightCm, settings.waistCm, settings.neckCm);
+            document.getElementById('bodyFatDisplay').innerText = bf ? `${bf.toFixed(1)} %` : '-- %';
+            const whtr = settings.waistCm / settings.heightCm;
+            document.getElementById('whtrDisplay').innerText = whtr.toFixed(2);
+            document.getElementById('bodyCompNote').innerText = `Height: ${settings.heightCm} cm • Neck: ${settings.neckCm} cm (U.S. Navy)`;
+
+            // Render Weekly Overview Table
             const weeklyTbody = document.getElementById('weeklyTableBody');
             weeklyTbody.innerHTML = '';
 
@@ -393,47 +547,56 @@
 
                 let statusBadge = '<span class="text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full text-[10px]">Baseline</span>';
                 if (diff !== null) {
-                    if (diff <= -0.4 && diff >= -1.0) {
-                        statusBadge = '<span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Dialed In</span>';
-                    } else if (diff < -1.0) {
-                        statusBadge = '<span class="text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Fast Drop</span>';
-                    } else if (diff < 0) {
-                        statusBadge = '<span class="text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Steady</span>';
+                    if (isCut) {
+                        if (diff <= -0.35 && diff >= -1.0) {
+                            statusBadge = '<span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Dialed In</span>';
+                        } else if (diff < -1.0) {
+                            statusBadge = '<span class="text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Fast Drop</span>';
+                        } else if (diff < 0) {
+                            statusBadge = '<span class="text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Steady</span>';
+                        } else {
+                            statusBadge = '<span class="text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Stall / Hold</span>';
+                        }
                     } else {
-                        statusBadge = '<span class="text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Stall / Hold</span>';
+                        if (Math.abs(diff) <= 0.3) {
+                            statusBadge = '<span class="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Stable</span>';
+                        } else {
+                            statusBadge = '<span class="text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">Drifting</span>';
+                        }
                     }
                 }
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-800/30 transition';
                 tr.innerHTML = `
-                    <td class="py-3 px-4">
+                    <td class="py-2.5 px-4">
                         <div class="text-gray-200 font-medium">${wk.label}</div>
                         <div class="text-[10px] text-gray-500">${wk.count} weigh-in${wk.count === 1 ? '' : 's'}</div>
                     </td>
-                    <td class="py-3 px-4 text-white font-bold">${wk.avg.toFixed(1)} kg</td>
-                    <td class="py-3 px-4 font-medium ${diff === null ? 'text-gray-500' : diff <= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                    <td class="py-2.5 px-4 text-white font-bold">${wk.avg.toFixed(1)} kg</td>
+                    <td class="py-2.5 px-4 font-medium ${diff === null ? 'text-gray-500' : diff <= 0 ? 'text-emerald-400' : 'text-rose-400'}">
                         ${diff === null ? '--' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg`}
                     </td>
-                    <td class="py-3 px-4 text-right">${statusBadge}</td>
+                    <td class="py-2.5 px-4 text-right">${statusBadge}</td>
                 `;
                 weeklyTbody.appendChild(tr);
             });
 
-            // Render Daily History Table (Newest first)
+            // Render Daily History Table
             const tbody = document.getElementById('logTableBody');
             tbody.innerHTML = '';
-            
+
             [...entries].reverse().forEach((entry, index) => {
                 const actualIdx = entries.length - 1 - index;
                 const prevEntry = actualIdx > 0 ? entries[actualIdx - 1] : null;
                 const diff = prevEntry ? (entry.weight - prevEntry.weight) : null;
-                
+                const tagHtml = entry.tag ? `<span class="ml-1.5 text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/25 px-1.5 py-0.5 rounded-md">${entry.tag}</span>` : '';
+
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-800/30 transition';
                 tr.innerHTML = `
                     <td class="py-2.5 px-4 text-gray-300 font-medium">${formatSlovakDate(entry.date, true)}</td>
-                    <td class="py-2.5 px-4 text-white font-bold">${entry.weight.toFixed(1)} kg</td>
+                    <td class="py-2.5 px-4 text-white font-bold">${entry.weight.toFixed(1)} kg${tagHtml}</td>
                     <td class="py-2.5 px-4 ${diff === null ? 'text-gray-500' : diff <= 0 ? 'text-emerald-400' : 'text-rose-400'}">
                         ${diff === null ? '--' : `${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg`}
                     </td>
@@ -444,36 +607,69 @@
                 tbody.appendChild(tr);
             });
 
-            // Update Chart
-            if (weightChart) {
-                weightChart.data.labels = entries.map(e => formatSlovakDate(e.date, false));
-                weightChart.data.datasets[0].data = entries.map(e => e.weight);
-                weightChart.data.datasets[1].data = computeMovingAverage(entries, 7);
-                weightChart.update();
+            updateChart();
+        }
+
+        function getFilteredChartData() {
+            const fullTrend = computeMovingAverage(entries, 7);
+            if (settings.chartRange === 'all') {
+                return { sliceEntries: entries, sliceTrend: fullTrend };
             }
+            const days = parseInt(settings.chartRange, 10);
+            const latest = entries[entries.length - 1];
+            const [ly, lm, ld] = latest.date.split('-').map(Number);
+            const cutoff = new Date(ly, lm - 1, ld - days);
+
+            const filteredIndices = entries.map((e, i) => {
+                const [ey, em, ed] = e.date.split('-').map(Number);
+                return new Date(ey, em - 1, ed) >= cutoff ? i : -1;
+            }).filter(i => i !== -1);
+
+            if (filteredIndices.length < 2) {
+                return { sliceEntries: entries, sliceTrend: fullTrend };
+            }
+
+            return {
+                sliceEntries: filteredIndices.map(i => entries[i]),
+                sliceTrend: filteredIndices.map(i => fullTrend[i])
+            };
+        }
+
+        function updateChart() {
+            if (!weightChart) return;
+            const { sliceEntries, sliceTrend } = getFilteredChartData();
+
+            weightChart.data.labels = sliceEntries.map(e => formatSlovakDate(e.date, false));
+            weightChart.data.datasets[0].data = sliceEntries.map(e => e.weight);
+            weightChart.data.datasets[0].pointBackgroundColor = sliceEntries.map(e => e.tag ? '#fbbf24' : '#6366f1');
+            weightChart.data.datasets[0].pointRadius = sliceEntries.map(e => e.tag ? 5 : 3.5);
+            weightChart.data.datasets[1].data = sliceTrend;
+            weightChart.update();
         }
 
         function initChart() {
             const ctx = document.getElementById('weightChart').getContext('2d');
+            const { sliceEntries, sliceTrend } = getFilteredChartData();
+
             weightChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: entries.map(e => formatSlovakDate(e.date, false)),
+                    labels: sliceEntries.map(e => formatSlovakDate(e.date, false)),
                     datasets: [
                         {
                             label: 'Daily (kg)',
-                            data: entries.map(e => e.weight),
+                            data: sliceEntries.map(e => e.weight),
                             borderColor: '#6366f1',
                             backgroundColor: 'rgba(99, 102, 241, 0.08)',
                             borderWidth: 2,
-                            pointBackgroundColor: '#6366f1',
-                            pointRadius: 3.5,
+                            pointBackgroundColor: sliceEntries.map(e => e.tag ? '#fbbf24' : '#6366f1'),
+                            pointRadius: sliceEntries.map(e => e.tag ? 5 : 3.5),
                             fill: true,
                             tension: 0.25
                         },
                         {
                             label: '7-Day Trend (kg)',
-                            data: computeMovingAverage(entries, 7),
+                            data: sliceTrend,
                             borderColor: '#34d399',
                             borderWidth: 2,
                             borderDash: [5, 5],
@@ -497,7 +693,16 @@
                             titleColor: '#f3f4f6',
                             bodyColor: '#d1d5db',
                             borderColor: 'rgba(255,255,255,0.1)',
-                            borderWidth: 1
+                            borderWidth: 1,
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    if (context.datasetIndex === 0) {
+                                        const entry = sliceEntries[context.dataIndex];
+                                        return entry && entry.tag ? `Tag: ${entry.tag}` : '';
+                                    }
+                                    return '';
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -514,13 +719,60 @@
             });
         }
 
+        function setChartRange(range) {
+            settings.chartRange = range;
+            saveAll();
+            updateRangeButtons();
+            updateChart();
+        }
+
+        function updateRangeButtons() {
+            ['14', '30', 'all'].forEach(r => {
+                const btn = document.getElementById(`range-${r}`);
+                if (settings.chartRange === r) {
+                    btn.className = 'px-2 py-0.5 rounded-md bg-indigo-600 text-white font-semibold transition';
+                } else {
+                    btn.className = 'px-2 py-0.5 rounded-md text-gray-400 hover:text-white transition';
+                }
+            });
+        }
+
+        function togglePhaseMode() {
+            settings.mode = settings.mode === 'cut' ? 'maintenance' : 'cut';
+            saveAll();
+            renderDashboard();
+        }
+
+        function toggleTag(tag) {
+            selectedTag = selectedTag === tag ? '' : tag;
+            document.querySelectorAll('.tag-btn').forEach(btn => {
+                if (btn.dataset.tag === selectedTag) {
+                    btn.className = 'tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold transition';
+                } else {
+                    btn.className = 'tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 transition';
+                }
+            });
+        }
+
         function openLogModal() {
             document.getElementById('logModal').classList.remove('hidden');
             const now = new Date();
             const localIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             document.getElementById('logDate').value = localIso;
-            if (entries.length > 0) {
+            const existing = entries.find(e => e.date === localIso);
+            if (existing) {
+                document.getElementById('logWeight').value = existing.weight.toFixed(1);
+                selectedTag = existing.tag || '';
+            } else if (entries.length > 0) {
                 document.getElementById('logWeight').value = entries[entries.length - 1].weight.toFixed(1);
+                selectedTag = '';
+            }
+            toggleTag(selectedTag);
+            // Reset highlight properly if empty
+            if (!selectedTag) {
+                document.querySelectorAll('.tag-btn').forEach(btn => {
+                    btn.className = 'tag-btn text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 transition';
+                });
             }
         }
 
@@ -542,29 +794,52 @@
             const existingIndex = entries.findIndex(item => item.date === date);
             if (existingIndex >= 0) {
                 entries[existingIndex].weight = weight;
+                entries[existingIndex].tag = selectedTag;
             } else {
-                entries.push({ date, weight });
+                entries.push({ date, weight, tag: selectedTag });
             }
 
-            saveToStorage();
+            saveAll();
             sortEntries();
             renderDashboard();
             closeLogModal();
         }
 
         function editTargetWeight() {
-            const val = prompt('Set target goal weight (kg):', targetWeight.toFixed(1));
+            const val = prompt('Set goal weight (kg):', settings.targetWeight.toFixed(1));
             if (val !== null && !isNaN(parseFloat(val))) {
-                targetWeight = parseFloat(val);
-                saveToStorage();
+                settings.targetWeight = parseFloat(val);
+                saveAll();
                 renderDashboard();
             }
+        }
+
+        function editAvgCalories() {
+            const val = prompt('Enter your average daily calorie intake (kcal):', settings.avgCalories);
+            if (val !== null && !isNaN(parseInt(val, 10))) {
+                settings.avgCalories = parseInt(val, 10);
+                saveAll();
+                renderDashboard();
+            }
+        }
+
+        function editBodyMetrics() {
+            const w = prompt('Enter current waist measurement at navel (cm):', settings.waistCm.toFixed(1));
+            if (w !== null && !isNaN(parseFloat(w))) {
+                settings.waistCm = parseFloat(w);
+            }
+            const n = prompt('Enter neck measurement (cm):', settings.neckCm.toFixed(1));
+            if (n !== null && !isNaN(parseFloat(n))) {
+                settings.neckCm = parseFloat(n);
+            }
+            saveAll();
+            renderDashboard();
         }
 
         function deleteEntry(index) {
             if (confirm(`Delete entry from ${formatSlovakDate(entries[index].date, true)}?`)) {
                 entries.splice(index, 1);
-                saveToStorage();
+                saveAll();
                 renderDashboard();
             }
         }
@@ -572,13 +847,13 @@
         function resetToDefaultData() {
             if (confirm('Reset to default cutting history?')) {
                 entries = [...defaultEntries];
-                saveToStorage();
+                saveAll();
                 renderDashboard();
             }
         }
 
         function exportData() {
-            const dataStr = JSON.stringify({ targetWeight, entries }, null, 2);
+            const dataStr = JSON.stringify({ settings, entries }, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -599,10 +874,11 @@
                         entries = parsed;
                     } else if (parsed.entries && Array.isArray(parsed.entries)) {
                         entries = parsed.entries;
-                        if (parsed.targetWeight) targetWeight = parsed.targetWeight;
+                        if (parsed.settings) settings = { ...settings, ...parsed.settings };
                     }
-                    saveToStorage();
+                    saveAll();
                     sortEntries();
+                    updateRangeButtons();
                     renderDashboard();
                     alert('Backup restored!');
                 } catch (err) {
